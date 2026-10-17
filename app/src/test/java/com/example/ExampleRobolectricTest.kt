@@ -1,0 +1,42 @@
+package com.example
+
+import android.content.Context
+import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
+class ExampleRobolectricTest {
+
+  @Test
+  fun `read string from context`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val appName = context.getString(R.string.app_name)
+    assertEquals("Artist Story", appName)
+  }
+
+  @Test
+  fun `launch MainActivity without crash`() {
+    ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+      scenario.onActivity { activity ->
+        assertNotNull(activity)
+        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+      }
+    }
+  }
+
+  @Test
+  fun `database initializes and queries safely without crash`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val db = com.example.data.AppDatabase.getDatabase(context)
+    assertNotNull(db)
+    val dao = db.gameStateDao()
+    assertNotNull(dao)
+  }
+}

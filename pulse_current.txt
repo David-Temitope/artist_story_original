@@ -1,0 +1,151 @@
+5643:fun PulseWireNewsScreen(state: GameStateEntity, viewModel: GameViewModel) {
+5644-    var selectedTab by remember { mutableStateOf("For You") }
+5645-    val tabs = listOf("For You", "Business", "Ecosystem", "Global")
+5646-
+5647-    Column(
+5648-        modifier = Modifier
+5649-            .fillMaxSize()
+5650-            .background(Color(0xFF0D0D12))
+5651-            .padding(12.dp)
+5652-    ) {
+5653-        // News App Header Banner
+5654-        Card(
+5655-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E28)),
+5656-            border = BorderStroke(1.dp, Color(0xFFE57373).copy(alpha = 0.4f)),
+5657-            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
+5658-        ) {
+5659-            Row(
+5660-                modifier = Modifier.padding(12.dp),
+5661-                verticalAlignment = Alignment.CenterVertically
+5662-            ) {
+5663-                Box(
+5664-                    modifier = Modifier
+5665-                        .size(32.dp)
+5666-                        .clip(RoundedCornerShape(6.dp))
+5667-                        .background(Color(0xFFE57373))
+5668-                        .align(Alignment.CenterVertically),
+5669-                    contentAlignment = Alignment.Center
+5670-                ) {
+5671-                    Text("P", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Black)
+5672-                }
+5673-                Spacer(modifier = Modifier.width(10.dp))
+5674-                Column {
+5675-                    Text("PULSEWIRE NEWS", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
+5676-                    Text("Your Independent Portal into the Music & Asset Ecosystem", color = Color.LightGray, fontSize = 9.sp)
+5677-                }
+5678-            }
+5679-        }
+5680-
+5681-        // Live Ticker ticker scroll effect
+5682-        Card(
+5683-            colors = CardDefaults.cardColors(containerColor = Color(0xFF15141D)),
+5684-            shape = RoundedCornerShape(4.dp),
+5685-            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+5686-        ) {
+5687-            Row(
+5688-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+5689-                verticalAlignment = Alignment.CenterVertically
+5690-            ) {
+5691-                Box(
+5692-                    modifier = Modifier
+5693-                        .clip(RoundedCornerShape(3.dp))
+5694-                        .background(Color.Red)
+5695-                        .padding(horizontal = 5.dp, vertical = 2.dp)
+5696-                ) {
+5697-                    Text("LIVE", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+5698-                }
+5699-                Spacer(modifier = Modifier.width(8.dp))
+5700-                val tickerText = "MARKETS: ${state.economyCycle} cycle active | WEEKLY FUEL: $${String.format("%.2f", state.fuelPrice)}/L | INFLATION: ${String.format("%.1f", state.inflationRate * 100)}% | ELECTION: ${if (state.isElectionSeason) "ACTIVE" else "INACTIVE"}"
+5701-                Text(
+5702-                    text = tickerText,
+5703-                    color = Color.LightGray,
+5704-                    fontSize = 10.sp,
+5705-                    maxLines = 1,
+5706-                    overflow = TextOverflow.Ellipsis,
+5707-                    fontWeight = FontWeight.Medium
+5708-                )
+5709-            }
+5710-        }
+5711-
+5712-        // Segment Tabs
+5713-        ScrollableTabRow(
+5714-            selectedTabIndex = tabs.indexOf(selectedTab),
+5715-            containerColor = Color.Transparent,
+5716-            contentColor = Color(0xFFE57373),
+5717-            edgePadding = 0.dp,
+5718-            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
+5719-        ) {
+5720-            tabs.forEach { tabName ->
+5721-                Tab(
+5722-                    selected = selectedTab == tabName,
+5723-                    onClick = { selectedTab = tabName },
+5724-                    text = { Text(tabName, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
+5725-                )
+5726-            }
+5727-        }
+5728-
+5729-        // Dynamically generated articles feed based on selected tab
+5730-        LazyColumn(
+5731-            verticalArrangement = Arrangement.spacedBy(10.dp),
+5732-            modifier = Modifier.weight(1f).fillMaxWidth()
+5733-        ) {
+5734-            val liveArticles = state.newsArticles.filter { 
+5735-                when (selectedTab) {
+5736-                    "Business" -> it.category.equals("Business", ignoreCase = true)
+5737-                    "Ecosystem" -> it.category.equals("Ecosystem", ignoreCase = true)
+5738-                    "Global" -> it.category.equals("Global", ignoreCase = true)
+5739-                    else -> it.category.equals("Music", ignoreCase = true) || it.category.equals("For You", ignoreCase = true)
+5740-                }
+5741-            }
+5742-            
+5743-            val articles = if (liveArticles.isNotEmpty()) {
+5744-                liveArticles.map {
+5745-                    val categoryTag = it.category.uppercase()
+5746-                    NewsArticleItem(
+5747-                        tag = categoryTag,
+5748-                        headline = it.headline,
+5749-                        subtitle = it.subtitle + "\n\n" + it.body,
+5750-                        time = "Week ${it.week}, Year ${it.year}",
+5751-                        author = it.author,
+5752-                        imageUrl = getNewsImageUrl(categoryTag)
+5753-                    )
+5754-                }
+5755-            } else {
+5756-                when (selectedTab) {
+5757-                    "Business" -> listOf(
+5758-                        NewsArticleItem(
+5759-                            tag = "BUSINESS / TAXES",
+5760-                            headline = if (state.taxDebt > 0.0) "IRS Delinquency Crackdown: Outstanding Artists Targeted!" else "Tax Champions: Financial Compliance Praised!",
+5761-                            subtitle = if (state.taxDebt > 0.0) "Tax liabilities of $${String.format("%,.2f", state.taxDebt)} detected. IRS hints at immediate 25% salary garnishments to recover debts." else "Keeping spotless tax ledgers has fully insulated compliant soundwrights from auditing waves sweeping major labels.",
+5762-                            time = "Week ${state.currentWeek}, Year ${state.currentYear}",
+5763-                            author = "Financial Desk",
+5764-                            imageUrl = getNewsImageUrl("TAX")
+5765-                        ),
+5766-                        NewsArticleItem(
+5767-                            tag = "ECONOMY",
+5768-                            headline = "Economic Cyclical Forecast: ${state.economyCycle} Dynamics",
+5769-                            subtitle = "Leading venture analysts confirm inflation is hovering around ${String.format("%.1f", state.inflationRate * 100)}%, restricting touring models.",
+5770-                            time = "Week ${state.currentWeek}, Year ${state.currentYear}",
+5771-                            author = "Alex Brody",
+5772-                            imageUrl = getNewsImageUrl("ECONOMY")
+5773-                        )
+5774-                    )
+5775-                    "Ecosystem" -> listOf(
+5776-                        NewsArticleItem(
+5777-                            tag = "STEWARDSHIP",
+5778-                            headline = if (state.titheDebt > 5000.0) "The Spiritual Cost of Neglect: High Spiritual Delinquency Warned!" else if (state.spiritualTotalTithesPaid > 5000.0) "Sacred Stewardship: Generous Artist Elevates Sanctuary!" else "Mindfulness Check: The Balance of Spiritual Health & Daily Chores",
+5779-                            subtitle = if (state.titheDebt > 5000.0) "Local clergy warns that holding $${String.format("%,.2f", state.titheDebt)} in unpaid spiritual obligations attracts severe professional friction, stress, and sets back creativity." else if (state.spiritualTotalTithesPaid > 5000.0) "Total spiritual contributions of $${String.format("%,.2f", state.spiritualTotalTithesPaid)} have unlocked protective blessings and raised public reputation." else "Modern songwriters highlight the correlation of daily meditation, spiritual care, and charitable acts with overall career longevity.",
+5780-                            time = "Week ${state.currentWeek}, Year ${state.currentYear}",
+5781-                            author = "Soul & Spirit",
+5782-                            imageUrl = getNewsImageUrl("STEWARDSHIP")
+5783-                        ),
+5784-                        NewsArticleItem(
+5785-                            tag = "STAFF DEBATE",
+5786-                            headline = "PR Experts Endorse Dedicated Social Media Managers!",
+5787-                            subtitle = "Hiring a specialized Social Media Manager is now considered the most cost-effective mechanism to sustain trendscores and organic fan drift.",
+5788-                            time = "Week ${state.currentWeek}, Year ${state.currentYear}",
+5789-                            author = "Olivia Pope",
+5790-                            imageUrl = getNewsImageUrl("STAFF")
+5791-                        )
+5792-                    )
+5793-                    "Global" -> listOf(
